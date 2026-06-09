@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workspace Chat</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Login overlay -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+          <rect width="40" height="40" rx="10" fill="#5865f2"/>
+          <path d="M12 20L18 26L28 14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1>Welcome to Workspace Chat</h1>
+      <p>Enter your name to join the conversation</p>
+      <form id="login-form">
+        <input
+          type="text"
+          id="username-input"
+          placeholder="Your display name"
+          maxlength="32"
+          autocomplete="off"
+          required
+        />
+        <button type="submit" class="btn-primary">Join Workspace</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main app shell -->
+  <div id="app" class="app hidden">
+
+    <!-- Column 1: Workspaces rail -->
+    <aside class="col-workspaces" aria-label="Workspaces">
+      <div class="workspace-home" title="Home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1V9.5z"/>
+        </svg>
+      </div>
+      <div class="workspace-divider"></div>
+      <nav id="workspace-list" class="workspace-list" role="list"></nav>
+      <button class="workspace-add" title="Add workspace" aria-label="Add workspace">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </aside>
+
+    <!-- Column 2: Channel / DM directory -->
+    <aside class="col-directory" aria-label="Channels and direct messages">
+      <header class="directory-header">
+        <h2 id="workspace-name" class="workspace-title">Workspace</h2>
+        <button class="icon-btn" title="Workspace settings" aria-label="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="directory-scroll">
+        <section class="directory-section">
+          <div class="section-label">
+            <span>Channels</span>
+            <button class="icon-btn-sm" title="Browse channels" aria-label="Browse channels">+</button>
+          </div>
+          <ul id="channel-list" class="channel-list" role="list"></ul>
+        </section>
+
+        <section class="directory-section">
+          <div class="section-label">
+            <span>Direct Messages</span>
+            <button class="icon-btn-sm" title="New message" aria-label="New message">+</button>
+          </div>
+          <ul id="dm-list" class="channel-list" role="list"></ul>
+        </section>
+
+        <section class="directory-section">
+          <div class="section-label">
+            <span>Active — <span id="active-count">0</span></span>
+          </div>
+          <ul id="active-users-list" class="active-users-list" role="list"></ul>
+        </section>
+      </div>
+
+      <footer class="directory-footer">
+        <div class="user-pill">
+          <div id="user-avatar" class="user-avatar">?</div>
+          <div class="user-info">
+            <span id="user-name" class="user-name">Guest</span>
+            <span class="user-status">Online</span>
+          </div>
+        </div>
+      </footer>
+    </aside>
+
+    <!-- Column 3: Active conversation -->
+    <main class="col-conversation" aria-label="Conversation">
+
+      <!-- Empty state -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+        </div>
+        <h2>Select a channel to start chatting</h2>
+        <p>Pick a channel or direct message from the sidebar</p>
+      </div>
+
+      <!-- Conversation panel -->
+      <div id="conversation-panel" class="conversation-panel hidden">
+        <header class="conversation-header">
+          <div class="channel-info">
+            <span id="channel-hash" class="channel-hash">#</span>
+            <h2 id="channel-name" class="channel-name">general</h2>
+          </div>
+          <div class="conversation-actions">
+            <button class="icon-btn" title="Search" aria-label="Search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </button>
+            <button class="icon-btn" title="Pinned messages" aria-label="Pinned">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </button>
+            <button class="icon-btn" title="Members" aria-label="Members">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <div id="messages-container" class="messages-container">
+          <div id="messages-scroll" class="messages-scroll" role="log" aria-live="polite" aria-relevant="additions">
+            <div id="messages-list" class="messages-list"></div>
+          </div>
+          <button id="scroll-bottom-btn" class="scroll-bottom-btn hidden" aria-label="Scroll to bottom">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            New messages
+          </button>
+        </div>
+
+        <div id="typing-indicator" class="typing-indicator hidden" aria-live="polite">
+          <span class="typing-dots"><span></span><span></span><span></span></span>
+          <span id="typing-text"></span>
+        </div>
+
+        <footer class="composer">
+          <form id="message-form" class="composer-form">
+            <div class="composer-input-wrap">
+              <textarea
+                id="message-input"
+                class="composer-input"
+                placeholder="Message #general"
+                rows="1"
+                maxlength="2000"
+                aria-label="Message input"
+              ></textarea>
+            </div>
+            <button type="submit" class="composer-send" aria-label="Send message" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+            </button>
+          </form>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
